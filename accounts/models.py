@@ -62,3 +62,36 @@ class OTP(models.Model):
     @staticmethod
     def generate_otp():
         return str(random.randint(100000, 999999))
+
+
+from django.conf import settings
+from django.db import models
+from django.db.models import F
+from decimal import Decimal
+
+
+class Account(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.balance}"
+
+
+class Transaction(models.Model):
+    CREDIT = "CREDIT"
+    DEBIT = "DEBIT"
+
+    TRANSACTION_TYPE_CHOICES = [
+        (CREDIT, "Credit"),
+        (DEBIT, "Debit"),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="transactions")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    transaction_type = models.CharField(max_length=6, choices=TRANSACTION_TYPE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.transaction_type} - {self.amount}"
